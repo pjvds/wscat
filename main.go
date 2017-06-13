@@ -11,7 +11,7 @@ import (
 var origin = "http://localhost/"
 
 func main() {
-	if len(os.Args) == 0 {
+	if len(os.Args) == 1 {
 		log.Fatal("missing url argument, use: wscat ws://localhost")
 	}
 
@@ -20,7 +20,7 @@ func main() {
 		url = "ws://" + url
 	}
 
-	c, _, err := websocket.DefaultDialer.Dial(os.Args[1], nil)
+	c, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
