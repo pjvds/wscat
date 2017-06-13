@@ -1,0 +1,44 @@
+#!/bin/bash
+set -e
+
+if ! command -v git >/dev/null; then
+    echo "cannot find git" >> /dev/stderr
+    exit 1
+fi
+
+if ! command -v gox >/dev/null; then
+    echo "cannot find gox" >> /dev/stderr
+    exit 1
+fi
+
+VERSION=$(git describe --long --always)
+VERSION="v1.0"
+echo "building version: $VERSION"
+
+build_dir=`mktemp -d`
+function cleanup_build_dir {
+  rm -rf "$build_dir"
+}
+trap cleanup_build_dir EXIT
+
+gox -ldflags "-X main.version=$VERSION" \
+    -osarch="linux/amd64" \
+    -osarch="linux/386" \
+    -osarch="windows/amd64" \
+    -osarch="windows/386" \
+    -osarch="darwin/amd64" \
+    -osarch="darwin/386" \
+    -output="$build_dir/wscat-$VERSION-{{.OS}}-{{.Arch}}/wscat" github.com/pjvds/wscat
+
+if [ ! -d "./releases/" ]; then
+  mkdir ./releases
+fi
+
+tar cfz ./releases/wscat-$VERSION-linux-amd64.tar.gz -C $build_dir/wscat-$VERSION-linux-amd64 .
+tar cfz ./releases/wscat-$VERSION-linux-386.tar.gz -C $build_dir/wscat-$VERSION-linux-386 .
+tar cfz ./releases/wscat-$VERSION-darwin-amd64.tar.gz -C $build_dir/wscat-$VERSION-darwin-amd64 .
+tar cfz ./releases/wscat-$VERSION-darwin-386.tar.gz -C $build_dir/wscat-$VERSION-darwin-386 .
+zip -qr ./releases/wscat-$VERSION-windows-amd64.zip $build_dir/wscat-$VERSION-windows-amd64
+zip -qr ./releases/wscat-$VERSION-windows-386.zip $build_dir/wscat-$VERSION-windows-386
+
+rm -rf $build_dir
