@@ -16,7 +16,7 @@ func main() {
 	}
 
 	url := os.Args[1]
-	if !strings.HasPrefix("ws://", url) {
+	if !strings.HasPrefix(url, "ws://") {
 		url = "ws://" + url
 	}
 
