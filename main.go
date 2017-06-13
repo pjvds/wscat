@@ -1,32 +1,37 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
+	"strings"
 
-	"golang.org/x/net/websocket"
+	"github.com/gorilla/websocket"
 )
 
 var origin = "http://localhost/"
 
 func main() {
-	if len(os.Args) == 1 {
+	if len(os.Args) == 0 {
 		log.Fatal("missing url argument, use: wscat ws://localhost")
 	}
 
-	socket, err := websocket.Dial(os.Args[1], "", origin)
-	if err != nil {
-		log.Fatal(err)
+	url := os.Args[1]
+	if !strings.HasPrefix("ws://", url) {
+		url = "ws://" + url
 	}
 
-	buffer := make([]byte, 1000)
-	for {
-		n, err := socket.Read(buffer)
-		if err != nil {
-			log.Fatal(err)
-		}
+	c, _, err := websocket.DefaultDialer.Dial(os.Args[1], nil)
+	if err != nil {
+		log.Fatal("dial:", err)
+	}
+	defer c.Close()
 
-		fmt.Println(string(buffer[0:n]))
+	for {
+		_, message, err := c.ReadMessage()
+		if err != nil {
+			log.Println("read:", err)
+			return
+		}
+		log.Printf("%s\n", message)
 	}
 }
